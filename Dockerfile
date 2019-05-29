@@ -36,8 +36,6 @@ ENV SHELL=/bin/bash \
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8
 
-# Copy example notebooks to tmp directory
-COPY . /app/
 
 # Install Python 3 packages
 ####################################################
@@ -48,6 +46,9 @@ RUN apt-get update \
   && cd /usr/local/bin \
   && ln -s /usr/bin/python3 python \
   && pip3 install --upgrade pip 
+
+# Copy requirements for python3 [requirements3.txt]
+COPY requirements3.txt /app/
 
 # Install python3 packages ... (only neo 0.5.2 will import Spike2 files)
 RUN pip3 install -r /app/requirements3.txt
@@ -61,6 +62,9 @@ RUN apt-get update \
 	&& apt-get install -y python2.7 python-pip 
 
 RUN sudo -H pip2 install --upgrade pip
+
+# Copy requirements for python2 [requirements2.txt]
+COPY requirements2.txt /app/
 
 # Install python2 packages ... (only neo 0.5.2 will import Spike2 files)
 RUN pip install -r /app/requirements2.txt
