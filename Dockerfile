@@ -8,6 +8,7 @@ USER root
 
 ENV DEBIAN_FRONTEND noninteractive
 
+
 # Install OS packages r-cran-nloptr is installed here because it is required for
 # R package ez but will not install via R command line
 RUN apt-get update && apt-get install -y \
@@ -26,6 +27,19 @@ RUN apt-get update && apt-get install -y \
     virtualenv \
     r-cran-nloptr \
     curl \
+    r-base-dev \
+    python3-pip \
+    python3-dev \
+    python2.7 \
+    python-pip 
+
+
+# Install nodejs for Jupyter lab extensions
+# https://github.com/nodesource/distributions
+RUN curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+RUN apt-get update && apt-get install -y \
+    nodejs \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/* 
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
@@ -42,11 +56,7 @@ ENV SHELL=/bin/bash \
 ####################################################
 
 # Install python3 and pip package manager
-RUN apt-get update \
-  && apt-get install -y \
-  python3-pip \
-  python3-dev \
-  && cd /usr/local/bin \
+RUN cd /usr/local/bin \
   && ln -s /usr/bin/python3 python \
   && pip3 install --upgrade pip 
 
@@ -63,12 +73,7 @@ RUN pip3 install \
 
 # Install python 2.7 and pip package manager ... an apt-get update is needed to
 # configure the package manager
-RUN apt-get update \
-  && apt-get install -y \
-  python2.7 \
-  python-pip \
-  && rm -rf /var/lib/apt/lists/* \
-  && sudo -H pip2 install --upgrade pip
+RUN sudo -H pip2 install --upgrade pip
 
 # Copy requirements for python2 [requirements2.txt]
 COPY requirements2.txt /app/
@@ -80,11 +85,6 @@ RUN pip install \
 
 # Install Jupyter lab extensions
 ####################################################
-
-# Install nodejs for Jupyter lab extensions
-# https://github.com/nodesource/distributions
-RUN curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-RUN sudo apt-get install -y nodejs 
 
 # Install yarn
 RUN npm install -g yarn
@@ -109,12 +109,7 @@ RUN jupyter labextension install \
 ####################################################
 
 # Install R & Set default R CRAN repo
-RUN apt-get install -y \
-  r-base-dev \
-	&& apt-get clean \
-	&& apt-get remove \
-	&& rm -rf /var/lib/apt/lists/* \
-  && echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
+RUN echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
 
 # Install R Packages and kernel for Jupyter notebook
 COPY setup.R /app/
