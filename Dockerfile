@@ -25,7 +25,8 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     virtualenv \
     r-cran-nloptr \
-    curl 
+    curl \
+    && rm -rf /var/lib/apt/lists/* 
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
@@ -42,7 +43,9 @@ ENV SHELL=/bin/bash \
 
 # Install python3 and pip package manager
 RUN apt-get update \
-  && apt-get install -y python3-pip python3-dev \
+  && apt-get install -y \
+  python3-pip \
+  python3-dev \
   && cd /usr/local/bin \
   && ln -s /usr/bin/python3 python \
   && pip3 install --upgrade pip 
@@ -51,7 +54,9 @@ RUN apt-get update \
 COPY requirements3.txt /app/
 
 # Install python3 packages ... (only neo 0.5.2 will import Spike2 files)
-RUN pip3 install -r /app/requirements3.txt
+RUN pip3 install \
+  --no-cache-dir \
+  -r /app/requirements3.txt
 
 # Install Python 2 and packages
 ####################################################
@@ -59,15 +64,19 @@ RUN pip3 install -r /app/requirements3.txt
 # Install python 2.7 and pip package manager ... an apt-get update is needed to
 # configure the package manager
 RUN apt-get update \
-	&& apt-get install -y python2.7 python-pip 
-
-RUN sudo -H pip2 install --upgrade pip
+  && apt-get install -y \
+  python2.7 \
+  python-pip \
+  && rm -rf /var/lib/apt/lists/* \
+  && sudo -H pip2 install --upgrade pip
 
 # Copy requirements for python2 [requirements2.txt]
 COPY requirements2.txt /app/
 
 # Install python2 packages ... (only neo 0.5.2 will import Spike2 files)
-RUN pip install -r /app/requirements2.txt
+RUN pip install \
+  --no-cache-dir \
+  -r /app/requirements2.txt
 
 # Install Jupyter lab extensions
 ####################################################
@@ -81,28 +90,35 @@ RUN sudo apt-get install -y nodejs
 RUN npm install -g yarn
 
 # Install Jupyterlab extensions, commment out those not currently supported
-RUN jupyter labextension install @jupyterlab/toc @jupyterlab/google-drive \
-@jupyterlab/celltags jupyterlab_bokeh @jupyterlab/github qgrid \
-@jupyter-widgets/jupyterlab-manager @jupyterlab/xkcd-extension \
-@jupyterlab/git @jupyterlab/geojson-extension @jupyterlab/plotly-extension \
-@mflevine/jupyterlab_html plotlywidget jupyterlab-drawio
+RUN jupyter labextension install \
+  @jupyterlab/toc \
+  @jupyterlab/google-drive \
+  @jupyterlab/celltags \
+  @jupyterlab/github \
+  qgrid \
+  @jupyter-widgets/jupyterlab-manager \
+  @jupyterlab/xkcd-extension \
+  @jupyterlab/git \
+  @jupyterlab/geojson-extension \
+  @jupyterlab/plotly-extension \
+  @mflevine/jupyterlab_html \
+  plotlywidget \
+  jupyterlab-drawio
 
 # Install R and packages
 ####################################################
 
-# Install R
-RUN apt-get install r-base-dev \
+# Install R & Set default R CRAN repo
+RUN apt-get install -y \
+  r-base-dev \
 	&& apt-get clean \
 	&& apt-get remove \
-	&& rm -rf /var/lib/apt/lists/*
-
-# Set default R CRAN repo
-RUN echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
+	&& rm -rf /var/lib/apt/lists/* \
+  && echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
 
 # Install R Packages and kernel for Jupyter notebook
-RUN Rscript -e "install.packages(c('devtools', 'ggplot2', 'plyr', 'reshape2', 'dplyr', 'tidyr', 'psych', 'pwr', 'STAR', 'ez', 'bursts'))"
-RUN Rscript -e "devtools::install_github('IRkernel/IRkernel')"
-RUN Rscript -e "IRkernel::installspec()"
+COPY setup.R /app/
+RUN Rscript /app/setup.R
 
 # Configure Jupyter notebook
 ####################################################
@@ -118,7 +134,6 @@ RUN echo "c.NotebookApp.open_browser = False" >>\
     /root/.jupyter/jupyter_notebook_config.py
 
 # install notebook kernel for Python 2.7
-RUN python2 -m pip install ipykernel
 RUN python2 -m ipykernel install --user
 
 # Run the Jupyter lab .. comment the first command because it is only for the
