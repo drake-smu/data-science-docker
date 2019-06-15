@@ -1,5 +1,5 @@
-# use Ubuntu 18.04 base image
-FROM ubuntu:latest
+# use Ubuntu
+FROM ubuntu:18.04
 
 LABEL maintainer="drakec"
 
@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     r-base-dev \
     python3-pip \
-    python3-dev \
+    python3.7-dev \
     python2.7 \
     python-pip 
 
