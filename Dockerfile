@@ -143,3 +143,4 @@ RUN pwd
 
 # Expose port to host
 EXPOSE 8888
+EXPOSE 8889
