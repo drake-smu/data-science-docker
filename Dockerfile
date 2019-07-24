@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y \
     vim \
     libzmq3-dev \
     libcurl4-openssl-dev \
+    libxml2-dev \
     libssl-dev \
     virtualenv \
     r-cran-nloptr \
@@ -37,7 +38,8 @@ RUN apt-get update && apt-get install -y \
 ####################################################
 FROM base as build_r
 # Install R & Set default R CRAN repo
-RUN echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
+# RUN echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
+RUN echo 'options(repos = c(CRAN = "https://cloud.r-project.org/"), download.file.method = "libcurl")' >> /usr/lib/R/etc/Rprofile.site
 
 # Install R Packages and kernel for Jupyter notebook
 COPY setup.R /app/
