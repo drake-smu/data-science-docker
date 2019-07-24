@@ -1,5 +1,4 @@
 package_list = c(
-    'devtools', 
     'ggplot2', 
     'plyr', 
     'reshape2', 
@@ -12,7 +11,7 @@ package_list = c(
     'bursts')
 
 # Install Packages ------------------------------
-options("repos"="http://cran.rstudio.com")
+install.packages("devtools")
 install.packages("RCurl")
 install.packages(package_list)
 

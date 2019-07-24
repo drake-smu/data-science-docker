@@ -33,6 +33,16 @@ RUN apt-get update && apt-get install -y \
     python-pip 
 
 
+# Install R and packages
+####################################################
+FROM base as build_r
+# Install R & Set default R CRAN repo
+RUN echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
+
+# Install R Packages and kernel for Jupyter notebook
+COPY setup.R /app/
+RUN Rscript /app/setup.R
+
 # Install nodejs for Jupyter lab extensions
 # https://github.com/nodesource/distributions
 RUN curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
@@ -53,15 +63,7 @@ ENV SHELL=/bin/bash \
 # Install yarn
 RUN npm install -g yarn
 
-# Install R and packages
-####################################################
-FROM base as build_r
-# Install R & Set default R CRAN repo
-RUN echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
 
-# Install R Packages and kernel for Jupyter notebook
-COPY setup.R /app/
-RUN Rscript /app/setup.R
 
 
 # Install Python 2 and packages
