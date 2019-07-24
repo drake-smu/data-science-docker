@@ -12,7 +12,8 @@ package_list = c(
     'bursts')
 
 # Install Packages ------------------------------
-
+options("repos"="http://cran.rstudio.com")
+install.packages("RCurl")
 install.packages(package_list)
 
 # Install IRkernel ------------------------------

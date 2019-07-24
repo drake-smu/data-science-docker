@@ -8,7 +8,6 @@ USER root
 
 ENV DEBIAN_FRONTEND noninteractive
 
-
 # Install OS packages r-cran-nloptr is installed here because it is required for
 # R package ez but will not install via R command line
 RUN apt-get update && apt-get install -y \
