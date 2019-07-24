@@ -1,5 +1,5 @@
-# use Ubuntu 18.04 base image
-FROM ubuntu:latest
+# use Ubuntu
+FROM ubuntu:18.04 as base
 
 LABEL maintainer="drakec"
 
@@ -28,8 +28,8 @@ RUN apt-get update && apt-get install -y \
     r-cran-nloptr \
     curl \
     r-base-dev \
+    python3.7-dev \
     python3-pip \
-    python3-dev \
     python2.7 \
     python-pip 
 
@@ -51,9 +51,38 @@ ENV SHELL=/bin/bash \
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8
 
+# Install yarn
+RUN npm install -g yarn
+
+# Install R and packages
+####################################################
+FROM base as build_r
+# Install R & Set default R CRAN repo
+RUN echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
+
+# Install R Packages and kernel for Jupyter notebook
+COPY setup.R /app/
+RUN Rscript /app/setup.R
+
+
+# Install Python 2 and packages
+####################################################
+FROM build_r as build_py2
+# Install python 2.7 and pip package manager ... an apt-get update is needed to
+# configure the package manager
+RUN sudo -H pip2 install --upgrade pip
+
+# Copy requirements for python2 [requirements2.txt]
+COPY requirements2.txt /app/
+
+# Install python2 packages ... (only neo 0.5.2 will import Spike2 files)
+RUN pip install \
+  --no-cache-dir \
+  -r /app/requirements2.txt
 
 # Install Python 3 packages
 ####################################################
+FROM build_py2 as build-py3
 
 # Install python3 and pip package manager
 RUN cd /usr/local/bin \
@@ -68,26 +97,8 @@ RUN pip3 install \
   --no-cache-dir \
   -r /app/requirements3.txt
 
-# Install Python 2 and packages
-####################################################
-
-# Install python 2.7 and pip package manager ... an apt-get update is needed to
-# configure the package manager
-RUN sudo -H pip2 install --upgrade pip
-
-# Copy requirements for python2 [requirements2.txt]
-COPY requirements2.txt /app/
-
-# Install python2 packages ... (only neo 0.5.2 will import Spike2 files)
-RUN pip install \
-  --no-cache-dir \
-  -r /app/requirements2.txt
-
 # Install Jupyter lab extensions
 ####################################################
-
-# Install yarn
-RUN npm install -g yarn
 
 # Install Jupyterlab extensions, commment out those not currently supported
 RUN jupyter labextension install \
@@ -105,15 +116,7 @@ RUN jupyter labextension install \
   plotlywidget \
   jupyterlab-drawio
 
-# Install R and packages
-####################################################
 
-# Install R & Set default R CRAN repo
-RUN echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
-
-# Install R Packages and kernel for Jupyter notebook
-COPY setup.R /app/
-RUN Rscript /app/setup.R
 
 # Configure Jupyter notebook
 ####################################################
