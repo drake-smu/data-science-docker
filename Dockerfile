@@ -1,5 +1,6 @@
 # use Ubuntu
-FROM ubuntu:18.04 as base
+# FROM ubuntu:18.04 
+FROM ubuntu:latest
 
 LABEL maintainer="drakec"
 
@@ -22,10 +23,10 @@ RUN apt-get update && apt-get install -y \
     vim \
     libzmq3-dev \
     libcurl4-openssl-dev \
-    libxml2-dev \
     libssl-dev \
     virtualenv \
     r-cran-nloptr \
+    r-cran-devtools \
     curl \
     r-base-dev \
     python3.7-dev \
@@ -33,25 +34,6 @@ RUN apt-get update && apt-get install -y \
     python2.7 \
     python-pip 
 
-
-# Install R and packages
-####################################################
-FROM base as build_r
-# Install R & Set default R CRAN repo
-# RUN echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
-RUN echo 'options(repos = c(CRAN = "https://cloud.r-project.org/"), download.file.method = "libcurl")' >> /usr/lib/R/etc/Rprofile.site
-
-# Install R Packages and kernel for Jupyter notebook
-COPY setup.R /app/
-RUN Rscript /app/setup.R
-
-# Install nodejs for Jupyter lab extensions
-# https://github.com/nodesource/distributions
-RUN curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-RUN apt-get update && apt-get install -y \
-    nodejs \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* 
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
@@ -62,15 +44,16 @@ ENV SHELL=/bin/bash \
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8
 
-# Install yarn
-RUN npm install -g yarn
-
+# Install nodejs for Jupyter lab extensions
+# https://github.com/nodesource/distributions
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - \
+  && apt-get install -y nodejs \
+  && apt-get clean
 
 
 
 # Install Python 2 and packages
 ####################################################
-FROM build_r as build_py2
 # Install python 2.7 and pip package manager ... an apt-get update is needed to
 # configure the package manager
 RUN sudo -H pip2 install --upgrade pip
@@ -85,7 +68,6 @@ RUN pip install \
 
 # Install Python 3 packages
 ####################################################
-FROM build_py2 as build-py3
 
 # Install python3 and pip package manager
 RUN cd /usr/local/bin \
@@ -100,24 +82,33 @@ RUN pip3 install \
   --no-cache-dir \
   -r /app/requirements3.txt
 
+
+# Install R and packages
+####################################################
+
+# Install R & Set default R CRAN repo
+# RUN echo 'options("repos"="http://cran.rstudio.com")' >> /usr/lib/R/etc/Rprofile.site
+RUN echo 'options(repos = c(CRAN = "https://cloud.r-project.org/"), download.file.method = "libcurl")' >> /usr/lib/R/etc/Rprofile.site
+
+# Install R Packages and kernel for Jupyter notebook
+COPY setup.R /app/
+RUN Rscript /app/setup.R
+
 # Install Jupyter lab extensions
 ####################################################
+# Install yarn
+RUN npm install -g yarn
 
 # Install Jupyterlab extensions, commment out those not currently supported
 RUN jupyter labextension install \
   @jupyterlab/toc \
-  @jupyterlab/google-drive \
-  @jupyterlab/celltags \
-  @jupyterlab/github \
   qgrid \
   @jupyter-widgets/jupyterlab-manager \
-  @jupyterlab/xkcd-extension \
   @jupyterlab/git \
   @jupyterlab/geojson-extension \
   @jupyterlab/plotly-extension \
   @mflevine/jupyterlab_html \
-  plotlywidget \
-  jupyterlab-drawio
+  plotlywidget
 
 
 
