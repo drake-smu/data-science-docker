@@ -49,7 +49,7 @@ pickleshare==0.7.5
 plotly==3.9.0
 prompt-toolkit==1.0.16
 protobuf==3.2.0
-psutil==5.6.2
+psutil==5.6.6
 ptyprocess==0.6.0
 pybursts==0.1.1
 pycrypto==2.6.1
